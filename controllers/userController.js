@@ -15,7 +15,7 @@ module.exports = {
     async getSingleUser(req, res) {
         try {
             const user = await User.findById({ _id: req.params.userId })
-            .select('-__v');
+                .select('-__v');
             if (!user) {
                 return res.status(404).json({ message: 'No user found with that ID!' })
             }
@@ -35,39 +35,69 @@ module.exports = {
         }
     },
 
-//    Updates user
-aysnc updateUser(req, res) {
-    try {
-        const user = await User.findByIdAndUpdate(
-            { _id: req.aparms.userId },
-            { $set: req.body },
-            { runValidators: true, new: true} 
-        );
-        if (!user) {
-            return res.status(404).json({ message: "No user found with that ID!" });
+    //    Updates user
+    async updateUser(req, res) {
+        try {
+            const user = await User.findByIdAndUpdate(
+                { _id: req.aparms.userId },
+                { $set: req.body },
+                { runValidators: true, new: true }
+            );
+            if (!user) {
+                return res.status(404).json({ message: "No user found with that ID!" });
+            }
+            res, json(user);
+        } catch (err) {
+            res.status(500).json(err);
         }
-        res,json(user);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-},
+    },
 
-// Deletes a user
-async deleteUser(req, res) {
-    try {
-        const user = await User.findOneAndDelete({ _id: req.params.userId });
-        if (!user){
-            return res.status(404).json({ message: "No user found with that ID!" })
+    // Deletes a user
+    async deleteUser(req, res) {
+        try {
+            const user = await User.findOneAndDelete({ _id: req.params.userId });
+            if (!user) {
+                return res.status(404).json({ message: "No user found with that ID!" })
+            }
+            // deletes users thoughts when user is deleted
+            await Thought.deleteMany({ _id: { $in: user.thoughts } });
+            res.json({ message: "User and thoughts have been deleted." })
+        } catch (err) {
+            res.status(500).json(err);
         }
-        // deletes users thoughts when user is deleted
-        await Thought.deleteMany({ _id: { $in: user.thoughts } });
-        res.json({ message: "User and thoughts have been deleted." })
-    } catch (err) {
-        res.status(500).json(err);
-    }
-}, 
+    },
 
-// Adds a friend
-async addFriend(req, res){
-    
+    // Adds a friend
+    async addFriend(req, res) {
+        try {
+            const user = await User.findOneAndUpdate(
+                { _id: req.params.userId },
+                { $addToSet: { friends: req.params.friendId } },
+                { runValidators: true, new: true }
+            );
+            if (!user) {
+                return res.status(404).json({ message: "No user found with that ID!" })
+            }
+            res.json(user);
+        } catch (err) {
+            res.status(500).json(err)
+        }
+    },
+
+    // Removes a friend
+    async removefriend(req, res) {
+        try {
+            const user = await User.findOneAndUpdate(
+                { _id: req.params.userId },
+                { $pull: { friends: req.params.friendId } },
+                { runValidators: true, new: true }
+            );
+            if (!user) {
+                return res.status(404).json({ message: "No user found with that ID!" });
+            }
+            res.json(user);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    }
 }
