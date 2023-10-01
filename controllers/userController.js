@@ -85,7 +85,7 @@ module.exports = {
     },
 
     // Removes a friend
-    async removefriend(req, res) {
+    async removeFriend(req, res) {
         try {
             const user = await User.findOneAndUpdate(
                 { _id: req.params.userId },
